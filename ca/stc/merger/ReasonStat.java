@@ -28,7 +28,7 @@ class ReasonStat {
     private Row currentRow;
     private Cell cellWithCategory;
     private Cell cellWithStockList;
-    private String category;    //原因类别
+    private String category;    //Reason in updater
     private String stockList;
     private Boolean oldCategory;
 
@@ -56,7 +56,8 @@ class ReasonStat {
     void insert() {
         for (int i = 0; i < this.stockInfoList.size(); i++) {
             this.oldCategory = false;       //Assume it is a new item
-            for (int j = 1; j < this.reasonStatSheet.getLastRowNum(); j++) {
+            //First row is header, iterate from the second row
+            for (int j = 1; j <= this.reasonStatSheet.getLastRowNum(); j++) {
                 this.currentRow = this.reasonStatSheet.getRow(j);
                 //Get 2 cells
                 this.cellWithCategory = this.currentRow.getCell(ReasonStat.CATEGORY_INDEX); 
@@ -71,6 +72,7 @@ class ReasonStat {
                 this.stockList = this.cellWithStockList.getStringCellValue();
                 //Compare reason in arraylist with category in reason statistic excel
                 if (stockInfoList.get(i).getReason().equalsIgnoreCase(this.category)) {
+                    //Write increase dates that is greater than 1 at the end of each stock name
                     if(stockInfoList.get(i).getIncreaseDates() > 1) {
                         this.stockList += stockInfoList.get(i).getName() 
                             + stockInfoList.get(i).getIncreaseDates().intValue() + "\n";
@@ -79,9 +81,10 @@ class ReasonStat {
                     }
                     this.cellWithStockList.setCellValue(this.stockList);
                     this.oldCategory = true;
-                    break;   //Item found, do not need to find the rows left
+                    break;   //Category found, do not need to find the rows left
                 }
             }   
+            //New category, insert a new row
             if (this.oldCategory == false) {
                 Row newRow = this.reasonStatSheet.createRow(this.reasonStatSheet.getLastRowNum() + 1);
                 newRow.createCell(ReasonStat.CATEGORY_INDEX).setCellValue(stockInfoList.get(i).getReason());
