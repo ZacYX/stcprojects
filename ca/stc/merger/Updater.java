@@ -44,19 +44,20 @@ class Updater {
         try {
             this.updaterWorkbook = new XSSFWorkbook(updaterFile);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         this.updaterSheet = updaterWorkbook.getSheetAt(0); //Updater file has only one sheet
         Row headerRow = this.updaterSheet.getRow(0);       //First row 
         for (Cell cell : headerRow) {
+            //There is a space before this string
             if (cell.getStringCellValue().contains(StockInfo.STOCK_NAME_HEADER)) {
                 this.nameColumnIndex = cell.getColumnIndex();
             }
             if (cell.getStringCellValue().contains(StockInfo.STOCK_REASON_HEADER)) {
                 this.reasonColumnIndex = cell.getColumnIndex();
             }
-            if (cell.getStringCellValue().contains(StockInfo.STOCK_INCREASE_RATE_HEADER)) {
+            //More than one contain this string
+            if (cell.getStringCellValue().equals(StockInfo.STOCK_INCREASE_RATE_HEADER)) {
                 this.increaseRateColumnIndex= cell.getColumnIndex();
             }
             if (cell.getStringCellValue().contains(StockInfo.STOCK_INCREASE_DATES_HEADER)) {
@@ -69,6 +70,8 @@ class Updater {
                 break;
             }
         }
+        System.out.println("Index:  name, " + nameColumnIndex + "    Reason, " + reasonColumnIndex 
+            + "    Rate, " + increaseRateColumnIndex + "    dates, " + increaseDatesColumnIndex);
     }
     //Get stock name, reason, increase rate, increase dates according row index
     void process() {
@@ -79,25 +82,41 @@ class Updater {
             this.cellWithIncreaseRate = this.currentRow.getCell(increaseRateColumnIndex);
             this.cellWithIncreaseDates = this.currentRow.getCell(increaseDatesColumnIndex);
             //read cells' content
-            if (this.cellWithName != null && this.cellWithReason != null
-                    && this.cellWithIncreaseRate != null 
-                    && this.cellWithIncreaseDates != null) {
-                //Not "--" and increase rate > 0.09 means a valid info, and add it to the list
-                if (!this.cellWithReason.getStringCellValue().equals(StockInfo.CELL_EMPTY_STRING)
-                        && this.cellWithIncreaseRate.getNumericCellValue() > StockInfo.STOCK_INCREASE_FLAG) {
-                    this.stockInfo.setName(this.cellWithName.getStringCellValue());
-                    //Reason: ****+*****+*****+****, get the one before the first "+"
-                    this.stockInfo.setReason(this.cellWithReason.getStringCellValue().substring(0, 
-                        this.cellWithReason.getStringCellValue().indexOf(StockInfo.STOCK_REASON_SPLITTER))) ;
+            try {
+                //Name
+                this.stockInfo.setName(this.cellWithName.getStringCellValue());
+                //Reason
+                this.stockInfo.setReason(this.cellWithReason.getStringCellValue());
+                //Increase rate
+                if (this.cellWithIncreaseRate.getCellType() == CellType.NUMERIC) {
                     this.stockInfo.setIncreaseRate(this.cellWithIncreaseRate.getNumericCellValue());
-                    this.stockInfo.setIncreaseDates(this.cellWithIncreaseDates.getNumericCellValue());
-                    this.stockInfoList.add(this.stockInfo);
-                    this.stockInfo = new StockInfo();
                 }
-            } else {
-                System.out.println("Null pointer in cells of name, reason, increaseRates!");
+                //Increase dates
+                if (this.cellWithIncreaseDates.getCellType() == CellType.NUMERIC) {
+                    this.stockInfo.setIncreaseDates(this.cellWithIncreaseDates.getNumericCellValue());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
             }
-           
+            //Reason: ****+*****+*****+****, get the one before the first "+"
+            if (this.stockInfo.getReason().contains(StockInfo.STOCK_REASON_SPLITTER)) {
+                this.stockInfo.setReason(this.stockInfo.getReason().substring(0, 
+                    this.stockInfo.getReason().indexOf(StockInfo.STOCK_REASON_SPLITTER))) ;
+            }
+            //Not "--" and increase rate > 0.09 means a valid info, and add it to the list
+            if (!this.stockInfo.getReason().equals(StockInfo.CELL_EMPTY_STRING)
+                    && this.stockInfo.getIncreaseRate() > StockInfo.STOCK_INCREASE_FLAG
+                    && this.stockInfo.getName().length() > 0
+                    && this.stockInfo.getIncreaseDates() > 0) {
+                this.stockInfoList.add(this.stockInfo);
+                this.stockInfo = new StockInfo();
+            } else {
+                // System.out.println(this.stockInfo.getName() + "    " 
+                //                     + this.stockInfo.getReason() + "    " 
+                //                     + this.stockInfo.getIncreaseRate() + "    "
+                //                     + this.stockInfo.getIncreaseDates());
+            }
         } 
         System.out.println("Total items: " + stockInfoList.size());
     }
@@ -105,7 +124,6 @@ class Updater {
         try {
             this.updaterWorkbook.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
