@@ -50,17 +50,17 @@ class Updater {
         Row headerRow = this.updaterSheet.getRow(0);       //First row 
         for (Cell cell : headerRow) {
             //There is a space before this string
-            if (cell.getStringCellValue().contains(StockInfo.STOCK_NAME_HEADER)) {
+            if (cell.getStringCellValue().trim().contains(StockInfo.STOCK_NAME_HEADER)) {
                 this.nameColumnIndex = cell.getColumnIndex();
             }
-            if (cell.getStringCellValue().contains(StockInfo.STOCK_REASON_HEADER)) {
+            if (cell.getStringCellValue().trim().contains(StockInfo.STOCK_REASON_HEADER)) {
                 this.reasonColumnIndex = cell.getColumnIndex();
             }
             //More than one contain this string
-            if (cell.getStringCellValue().equals(StockInfo.STOCK_INCREASE_RATE_HEADER)) {
+            if (cell.getStringCellValue().trim().equals(StockInfo.STOCK_INCREASE_RATE_HEADER)) {
                 this.increaseRateColumnIndex= cell.getColumnIndex();
             }
-            if (cell.getStringCellValue().contains(StockInfo.STOCK_INCREASE_DATES_HEADER)) {
+            if (cell.getStringCellValue().trim().contains(StockInfo.STOCK_INCREASE_DATES_HEADER)) {
                 this.increaseDatesColumnIndex = cell.getColumnIndex();
             }
             //Stop loop after getting all index
